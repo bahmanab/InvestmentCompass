@@ -79,10 +79,11 @@ a {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.23px;
-  padding: 12px 32px;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
+  padding: 7px 16px;
+  border-radius: 7px;
 }
 
 
@@ -277,6 +278,11 @@ header {
 
 #map {
   height: 500px;
+}
+
+.btn-primary.plotButton {
+  padding: 7px 16px;
+  border-radius: 7px;
 }
 
 .leaflet-popup-content h3 {

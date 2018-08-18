@@ -7,21 +7,27 @@
           <div class="places"> 
             <form method="POST" action="/">
               <br>
-              <div class="jumbotron">
+              {% if top_companies is defined %}
+              <div class="jumbotronc">
                 <h3>Most Popular Companies:</h3>
 
                 {% for company in top_companies %}
                 <div class="form-check">
-                  <input class="form-check-input" name="check" type="checkbox" value="{{ company[1], loop.index }}" id="checkBox{{ loop.index }}">
+                  <input class="form-check-input" name="check" type="checkbox" value="{{ company[1], loop.index }}" id="checkBox{{ loop.index }}"
+                         {% if loop.index in checked_list %}
+                         checked
+                         {% endif %} 
+                  >
                   <label class="form-check-label" for="checkBox{{ loop.index }}">
                    {{ company[0] }}
-                 </label>
+                  </label>
                 </div>
                 {% endfor %}
                 {% if listform is defined %}
                    {{ listform.submit(class="btn-primary") }}
                 {% endif %}
              </div>
+             {% endif %}
 
 
            </form>

@@ -70,7 +70,7 @@ def login():
 def logout():
     session.pop('email', None)
     return redirect(url_for('index'))   
-    
+
 
 @app.route("/datepicker")
 def datepicker():
@@ -86,6 +86,7 @@ def home():
     my_coordinates = (37.4221, -122.0844)
     top_companies = ()
     show_chart = False
+    checked_list = []
 
     if request.method == 'POST':
                         
@@ -115,10 +116,14 @@ def home():
                 top_companies.append(record)
             print("Top companies:", top_companies)
             print("Req:", request.form, request.form)
-            value = request.form.getlist('check') 
-            if len(value) > 0:
-                show_chart = True
-            print("Check:", value)
+            checkbox_values = request.form.getlist('check') 
+            if len(checkbox_values) > 0:
+                show_chart = True        # turn of plotting chart
+        
+            for value in checkbox_values:     
+                check_box_index = int(value[1:-1].split(',')[1])
+                checked_list.append(check_box_index)
+            
 
             chartID = 'chart_ID'
             chart_type = 'line'
@@ -143,7 +148,7 @@ def home():
             return render_template('home.html', form=form, top_companies=top_companies, listform=listform,
                 chartID=chartID, chart=chart, series=series, 
                            title=title, xAxis=xAxis, yAxis=yAxis, tooltip=tooltip, plotOptions=plotOptions,
-                           show_chart=show_chart, credits=credits)
+                           show_chart=show_chart, credits=credits, checked_list=checked_list)
  
     elif request.method == 'GET':
         return render_template('home.html', form=form)

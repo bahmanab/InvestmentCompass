@@ -15,13 +15,16 @@ print(os.path.join(output_directory, filename))
 # parse the cik lookup data and extract name and cik
 i = 0
 rows_list = []
+added_cik = set()
 with open(os.path.join(output_directory, filename), encoding="ISO-8859-1") as input_file:
     print('Reading the input file...')
     for line in input_file:
         i += 1
         company_name, cik = line.split(':')[:2]
-        line_dict = {'company_name': company_name.strip(), 'cik': cik.strip()}
-        rows_list.append(line_dict)
+        if cik not in added_cik:
+            line_dict = {'company_name': company_name.strip(), 'cik': cik.strip()}
+            rows_list.append(line_dict)
+            added_cik.add(cik)
 print('Reading the input file is completed.')
 
 columns = ['company_name', 'cik']

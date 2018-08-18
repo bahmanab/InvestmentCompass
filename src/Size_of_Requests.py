@@ -217,10 +217,7 @@ fields_index = sc.broadcast(fields_index_local)
 nasdaq_companies_dic = sc.broadcast(nasdaq_companies_dic_local)
 
 # read the csv log files from S3
-text_file = sc.textFile("s3a://edgar-log-files/logs/log2017060[0-9].csv,"
-                        "s3a://edgar-log-files/logs/log2017061[0-9].csv,"
-                        "s3a://edgar-log-files/logs/log2017062[0-9].csv,"
-                        "s3a://edgar-log-files/logs/log2017063[0-9].csv")
+text_file = sc.textFile("s3a://edgar-log-files/logs/log201[0-9][0-9][0-9][0-9][0-9].csv")
 
 input_rdd = text_file.map(lambda line: extract_required_fields(line, fields_index.value, required_fields_names.value))
              
@@ -228,7 +225,7 @@ input_rdd = text_file.map(lambda line: extract_required_fields(line, fields_inde
 sizes = (input_rdd.map(lambda x: (str_to_rounded_date_time(x['date'], x['time'], time_delta=60),
                                   str_to_float(x['size'])))
                   .reduceByKey(lambda x, y: x + y))
-
+ 
 print('Count sizes:', sizes.count())
 print(sizes.take(25))
 
@@ -241,7 +238,7 @@ unique_requests_hourly = (input_rdd.filter(
                                                    get_hll(item=x['ip'], register_count=5)))
                                    .reduceByKey(lambda x, y: merge_hll(x, y)))
 
-unique_requests_hourly_to_store = unique_requests_hourly.map(lambda x: (x[0][0], x[0][1], x[1].registers()))
+unique_requests_hourly_to_store = unique_requests_hourly.map(lambda x: (x[0][0], x[0][1], x[1].registers(), int(round(x[1].cardinality()))))
 
 # daily computation
 unique_requests_daily = (unique_requests_hourly.map(lambda x: ((round_date_time(x[0][0],
@@ -249,7 +246,7 @@ unique_requests_daily = (unique_requests_hourly.map(lambda x: ((round_date_time(
                                                                 x[0][1]), x[1]))
                                                .reduceByKey(lambda x, y: merge_hll(x, y)))
 
-unique_requests_daily_to_store = unique_requests_daily.map(lambda x: (x[0][0], x[0][1], x[1].registers()))
+unique_requests_daily_to_store = unique_requests_daily.map(lambda x: (x[0][0], x[0][1], x[1].registers(), int(round(x[1].cardinality()))))
 
 # monthly computation
 unique_requests_monthly = (unique_requests_daily.map(lambda x: ((round_date_time(x[0][0],
@@ -257,7 +254,7 @@ unique_requests_monthly = (unique_requests_daily.map(lambda x: ((round_date_time
                                                                  x[0][1]), x[1]))
                                                 .reduceByKey(lambda x, y: merge_hll(x, y)))
 
-unique_requests_monthly_to_store = unique_requests_monthly.map(lambda x: (x[0][0], x[0][1], x[1].registers()))
+unique_requests_monthly_to_store = unique_requests_monthly.map(lambda x: (x[0][0], x[0][1], x[1].registers(), int(round(x[1].cardinality()))))
 
 
 print(unique_requests_hourly.count())
@@ -273,9 +270,9 @@ properties = {"user": "postgres", "password": "seCurepassword", "driver": "org.p
 spark = SparkSession(sc)
 
 # convert RDD to DataFrame
-df_hourly = unique_requests_hourly_to_store.toDF(["date_time", "cik", "hll"])
-df_daily = unique_requests_daily_to_store.toDF(["date_time", "cik", "hll"])
-df_monthly = unique_requests_monthly_to_store.toDF(["date_time", "cik", "hll"])
+df_hourly = unique_requests_hourly_to_store.toDF(["date_time", "cik", "hll", "unique_requests"])
+df_daily = unique_requests_daily_to_store.toDF(["date_time", "cik", "hll", "unique_requests"])
+df_monthly = unique_requests_monthly_to_store.toDF(["date_time", "cik", "hll", "unique_requests"])
 
 # df.show()
 print("DF hourly count:", df_hourly.count())

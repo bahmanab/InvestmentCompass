@@ -25,7 +25,7 @@ a {
 }
 
 .container {
-  width: 1000px;
+  width: 1200px;
   margin: 0 auto;
 }
 
@@ -44,7 +44,7 @@ a {
 .section-content {
   color: #3a3a3a;
   float: left;
-  width: 340px;
+  width: 440px;
 }
 
 .section-device {
@@ -182,7 +182,7 @@ header {
   color: #3a3a3a;
   font-size: 18px;
   padding: 5px 0;
-  width: 100%;
+  width: 400px;
 }
 
 .form-group input:focus {

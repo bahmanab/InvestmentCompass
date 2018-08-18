@@ -1,9 +1,8 @@
-# from flask.ext.sqlalchemy import SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects import postgresql
 from werkzeug import generate_password_hash, check_password_hash
  
 import geocoder
-# import urllib.request as urllib2
 from urllib.request import urlopen
 from urllib.parse import urljoin
 import json
@@ -30,8 +29,29 @@ class User(db.Model):
 	def check_password(self, password):
 		return check_password_hash(self.pwdhash, password)
 
-# p = Place()
-# places = p.query("1600 Amphitheater Parkway Mountain View CA")
+
+class PopularCompanies(object):
+  def query(self, date_range):
+    """
+        date_range: range of date_time in string format as a list with two element
+    """
+    
+    # query for the top 10 most popular companies in the date_range provided
+    sql_command = """SELECT name_cik_table.company_name as company_name,
+                            unique_hourly_table.cik as cik, 
+                            sum_unique_requests
+                     FROM company_name_cik as name_cik_table
+                     JOIN (SELECT cik, SUM(unique_requests) as sum_unique_requests
+                           FROM unique_requests_nasdaq_hourly
+                           WHERE date_time BETWEEN  '{start_date_time}' AND  '{end_date_time}'
+                           GROUP BY cik) as unique_hourly_table
+                     ON unique_hourly_table.cik = name_cik_table.cik
+                     ORDER BY sum_unique_requests DESC
+                     LIMIT 10;""".format(start_date_time=date_range[0], end_date_time=date_range[1])
+    print(sql_command)
+    return db.engine.execute(sql_command)
+
+        
 class Place(object):
   def meters_to_walking_time(self, meters):
     # 80 meters is one minute walking time
@@ -76,3 +96,13 @@ class Place(object):
 
     return places
 
+class RequestsFileSize(db.Model):
+	__tablename__ = 'testdatetime'
+	datetime = db.Column(postgresql.TIMESTAMP, primary_key = True)
+	size = db.Column(postgresql.FLOAT)
+	hll = db.Column(postgresql.ARRAY(db.Integer, dimensions=1))
+
+	def __init__(self, datetime, size, hll):
+		self.datetime = datetime
+		self.size = size
+		self.hll = hll[:]

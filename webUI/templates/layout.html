@@ -30,7 +30,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 
     <script src="http://code.highcharts.com/highcharts.js"></script>
-    <script src="../static/js/graph.js"></script>
+    <!-- <script src="../static/js/graph.js"></script> -->
 
     <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
     
@@ -40,9 +40,12 @@
   <body>
     <header>
       <div class="container">
-        <!-- <img src="https://1.bp.blogspot.com/-O17qnaEJxkE/WedbjiRazEI/AAAAAAABTeE/t0NAQuyrskgivDQAO3j9Gu6A2sD-TGfiwCLcBGAs/s640/invest11.jpg" alt="Investement Compass Logo" heigh=150px> -->
-        <h1 class="title">Investment Compass</h1>
+        <img src="../static/img/logo.png" alt="Snow" style="width:100%;">
+        <div class="centered"><h1>Investment Compass</h1>
+        <h5>Which companies are most popular in NASDAQ?</h5></div>
+
       </div>
+
     </header>
     
     {% block content %}

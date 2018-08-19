@@ -1,69 +1,93 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <main class="hero-section">
-      <div class="container"> 
-        <div class="section-tabs">
-          <div class="places"> 
-            <form method="POST" action="/">
-              <br>
-              {% if top_companies is defined %}
-              <div class="jumbotronc">
-                <h3>Most Popular Companies:</h3>
+  <form method="POST" action="/">
+      <main class="hero-section">
+        <div class="container"> 
+          <div class="section-tabs">
+            <div class="places">             
+                <br><br><br><br>
+                {% if top_companies is defined %}
+                <div class="jumbotronc">
+                  {% if top_companies|length > 0 %}
+                    <h3>Most popular companies:</h3>
+    
+                    {% for company in top_companies %}
+                    <div class="form-check">
+                      <input class="form-check-input" name="check" type="checkbox" value="{{ company[1], loop.index, company[0] }}" id="checkBox{{ loop.index }}"
+                             {% if loop.index in checked_list %}
+                             checked
+                             {% endif %} 
+                      >
+                      <label class="form-check-label" for="checkBox{{ loop.index }}">
+                       {{ company[0] }}
+                      </label>
+                    </div>
+                    {% endfor %}
+                    {% if listform is defined %}
+                       {{ listform.submit(class="btn-primary") }}
+                    {% endif %}
+                  {% else %}
+                    <h4>No data is available in the selected date-time range. Please select a different range between 2016-07-01 and 2017-06-31.</h4>
+                  {% endif %}
+                   
 
-                {% for company in top_companies %}
-                <div class="form-check">
-                  <input class="form-check-input" name="check" type="checkbox" value="{{ company[1], loop.index }}" id="checkBox{{ loop.index }}"
-                         {% if loop.index in checked_list %}
-                         checked
-                         {% endif %} 
-                  >
-                  <label class="form-check-label" for="checkBox{{ loop.index }}">
-                   {{ company[0] }}
-                  </label>
-                </div>
-                {% endfor %}
-                {% if listform is defined %}
-                   {{ listform.submit(class="btn-primary") }}
-                {% endif %}
-             </div>
-             {% endif %}
-
-
-           </form>
+               </div>
+               {% endif %}
+           </div>
          </div>
-       </div>
-
-       <div class="section-map">
-        <div class="nav">
-          <form method="POST" action="/">
-            {{ form.hidden_tag() }}
-
-            <div class="form-group">
-              {% if form.date_time_range.errors %}
-              {% for error in form.date_time_range.errors %}
-              <p class="error-message">{{ error }}</p>
-              {% endfor %}
+  
+         <div class="section-map">
+          <div class="nav">
+              {{ form.hidden_tag() }}
+  
+              <div class="form-group">
+                {% if form.date_time_range.errors %}
+                {% for error in form.date_time_range.errors %}
+                <p class="error-message">{{ error }}</p>
+                {% endfor %}
+                {% endif %}
+  
+                {{ form.date_time_range(placeholder="Date-time range", id="datetime") }}
+              </div>                        
+              {{ form.submit(class="btn-primary") }}
+  
+              {% if show_chart is defined %}
+                {% if show_chart %}
+                <br><br><br>
+                <div id={{ chartID|safe }} class="chart" style="height: 500px;"></div>
+                  <script>
+                    $(function() {
+                     $(chart_id).highcharts({
+                      chart: chart,
+                      title: title,
+                      xAxis: xAxis,
+                      yAxis: yAxis,
+                      series: series,
+                      tooltip: tooltip, 
+                      plotOptions: plotOptions,
+                      credits: credits
+                    });
+                   });
+                   var chart_id = {{ chartID|safe }}
+                   var series = {{ series|safe }}
+                   var title = {{ title|safe }}
+                   var xAxis = {{ xAxis|safe }}
+                   var yAxis = {{ yAxis|safe }}
+                   var chart = {{ chart|safe }}
+                   var tooltip = {{ tooltip|safe }} 
+                   var plotOptions = {{ plotOptions|safe }}
+                   var credits = {{ credits|safe }}
+                  </script>
+                {% endif %}
               {% endif %}
-
-              {{ form.date_time_range(placeholder="Date-time range", id="datetime") }}
-            </div>                        
-            {{ form.submit(class="btn-primary") }}
-
-            {% if show_chart is defined %}
-              {% if show_chart %}
-              <br><br><br>
-              <div id={{ chartID|safe }} class="chart" style="height: 500px;"></div>
-              {% endif %}
-            {% endif %}
-          </form>
+          </div>
         </div>
+        
+        <div class="clearfix"></div>
       </div>
-      
-      <div class="clearfix"></div>
-    </div>
-  </main>
-
+    </main>
+  </form>
 
 
   <script>
@@ -86,27 +110,5 @@
    });
   </script>
 
-  <script>
-    $(function() {
-     $(chart_id).highcharts({
-      chart: chart,
-      title: title,
-      xAxis: xAxis,
-      yAxis: yAxis,
-      series: series,
-      tooltip: tooltip, 
-      plotOptions: plotOptions,
-      credits: credits
-    });
-   });
-   var chart_id = {{ chartID|safe }}
-   var series = {{ series|safe }}
-   var title = {{ title|safe }}
-   var xAxis = {{ xAxis|safe }}
-   var yAxis = {{ yAxis|safe }}
-   var chart = {{ chart|safe }}
-   var tooltip = {{ tooltip|safe }} 
-   var plotOptions = {{ plotOptions|safe }}
-   var credits = {{ credits|safe }}
-  </script>
+
 {% endblock %}

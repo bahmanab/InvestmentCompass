@@ -10,28 +10,44 @@ import datetime
 
 db = SQLAlchemy()
 
-class User(db.Model):
-	__tablename__ = 'users'
-	uid = db.Column(db.Integer, primary_key = True)
-	firstname = db.Column(db.String(100))
-	lastname = db.Column(db.String(100))
-	email = db.Column(db.String(120), unique = True)
-	pwdhash = db.Column(db.String(54))
-
-	def __init__(self, firstname, lastname, email, password):
-		self.firstname = firstname.title()
-		self.lastname = lastname.title()
-		self.email = email.lower()
-		self.set_password(password)
-
-	def set_password(self, password):
-		self.pwdhash = generate_password_hash(password)
-
-	def check_password(self, password):
-		return check_password_hash(self.pwdhash, password)
-
 
 class PopularCompanies(object):
+  def find_unique_request(self, cik, date_range):
+    sql_command = """SELECT hll
+                     FROM unique_requests_nasdaq_hourly
+                     WHERE (cik = '{cik}') AND (date_time BETWEEN  '{start_date_time}' AND  '{end_date_time}')
+                     """.format(cik=cik, start_date_time=date_range[0], end_date_time=date_range[1])
+    results = self.convert_query_result_to_list(db.engine.execute(sql_command))
+    return results                
+
+
+  def query_top_50(self, date_range):
+    # query for the top 10 most popular companies in the date_range provided
+    sql_command = """SELECT unique_hourly_table.cik as cik, 
+                            sum_unique_requests
+                     FROM company_name_cik as name_cik_table
+                     JOIN (SELECT cik, SUM(unique_requests) as sum_unique_requests
+                           FROM unique_requests_nasdaq_hourly
+                           WHERE date_time BETWEEN  '{start_date_time}' AND  '{end_date_time}'
+                           GROUP BY cik) as unique_hourly_table
+                     ON unique_hourly_table.cik = name_cik_table.cik
+                     ORDER BY sum_unique_requests DESC
+                     LIMIT 20;""".format(start_date_time=date_range[0], end_date_time=date_range[1])
+
+    results = self.convert_query_result_to_list(db.engine.execute(sql_command))
+    actual_unique_requests = []
+    for record in results:
+      print('Record[0]:', record[0])
+      unique_requests = self.find_unique_request(cik=record[0], date_range=date_range)
+      actual_unique_requests.append((record[0], unique_requests))
+
+    print('actual_unique_requests:', actual_unique_requests)
+    sorted_company_list = sorted(actual_unique_requests, key=lambda tup: tup[1], reverse=True)
+
+    return sorted_company_list[:10]
+
+
+
   def query_top_10(self, date_range):
     """
         date_range: range of date_time in string format as a list with two element
@@ -94,50 +110,17 @@ class PopularCompanies(object):
     return company_list
 
 
-        
-class Place(object):
-  def meters_to_walking_time(self, meters):
-    # 80 meters is one minute walking time
-    return int(meters / 80)  
+  def find_max_in_list(self, trend_data, index):
+    try:
+      max_field = trend_data[0][index] 
+    except:
+      max_field = 1
 
-  def wiki_path(self, slug):
-    return urljoin("http://en.wikipedia.org/wiki/", slug.replace(' ', '_'))
-  
-  def address_to_latlng(self, address):
-    g = geocoder.google(address)
-    return (g.lat, g.lng)
+    for i, rows in enumerate(trend_data):
+      max_field = max(max_field, trend_data[i][index])
 
-  def query(self, address):
-    lat, lng = self.address_to_latlng(address)
+    return max_field
     
-    query_url = 'https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=5000&gscoord={0}%7C{1}&gslimit=20&format=json'.format(lat, lng)
-    g = urlopen(query_url)
-    results = g.read().decode('ASCII')
-    g.close()
-
-    data = json.loads(str(results))
-    
-    places = []
-    for place in data['query']['geosearch']:
-      name = place['title']
-      meters = place['dist']
-      lat = place['lat']
-      lng = place['lon']
-
-      wiki_url = self.wiki_path(name)
-      walking_time = self.meters_to_walking_time(meters)
-
-      d = {
-        'name': name,
-        'url': wiki_url,
-        'time': walking_time,
-        'lat': lat,
-        'lng': lng
-      }
-
-      places.append(d)
-
-    return places
 
 class RequestsFileSize(db.Model):
 	__tablename__ = 'testdatetime'

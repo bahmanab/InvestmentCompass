@@ -53,13 +53,27 @@ def process_check_boxes():
     return show_chart, checked_list, cik_list, name_list
 
 
+def scale_series(series, scale_by, index):
+    for i, serie in enumerate(series):
+        for j, row in enumerate(serie['data']):
+            series[i]['data'][j][index] /= scale_by
+
+
 def get_plot_data(popular_companies, name_list, cik_list, date_range):
     if len(name_list):
-        series = [{"name": name_list[i], 
-                   "data": popular_companies.get_trend_data_for_cik(cik_list[i], date_range)} 
-                   for i in range(len(name_list))]
+        series = []
+        max_request = 0
+        for i in range(len(name_list)):
+            trend_data = popular_companies.get_trend_data_for_cik(cik_list[i], date_range)
+            max_request = max(max_request, popular_companies.find_max_in_list(trend_data, index=1))
+            print('max_request:', max_request)
+            series.append({"name": name_list[i], 
+                           "data": trend_data})
+        print('Series:', series)
+        scale_series(series, max_request, index=1)
     else:
         series = []
+
 
     return series
 
@@ -87,6 +101,8 @@ def home():
         series = get_plot_data(popular_companies, name_list, cik_list, date_range)
         
         chartID, chart, title, xAxis, yAxis, tooltip, plotOptions, credits = chart_setup()
+
+        # print(popular_companies.query_top_50(date_range))
 
         return render_template('home.html', form=form, top_companies=top_companies, listform=listform,
                                 chartID=chartID, chart=chart, series=series, title=title, xAxis=xAxis, 

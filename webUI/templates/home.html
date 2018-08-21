@@ -47,7 +47,9 @@
                 <p class="error-message">{{ error }}</p>
                 {% endfor %}
                 {% endif %}
-  
+                <label class="form-check-label">
+                     Select a date-time range:
+                </label>
                 {{ form.date_time_range(placeholder="Date-time range", id="datetime") }}
               </div>                        
               {{ form.submit(class="btn-primary") }}
@@ -66,7 +68,7 @@
                       series: series,
                       tooltip: tooltip, 
                       plotOptions: plotOptions,
-                      credits: credits
+                      credits: 'investmentcompass.live'
                     });
                    });
                    var chart_id = {{ chartID|safe }}
@@ -92,7 +94,11 @@
 
   <script>
     $(function() {
-     $('input[name="date_time_range"]').daterangepicker({   
+      var start = moment().subtract(430, 'days');
+      var end = moment().subtract(415, 'days');
+     $('input[name="date_time_range"]').daterangepicker({ 
+      startDate: start,
+      endDate: end,  
       timePicker: true,
       timePicker24Hour: true,
       ranges: {

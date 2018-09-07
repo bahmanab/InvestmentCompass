@@ -94,11 +94,14 @@
 
   <script>
     $(function() {
-      var start = moment().subtract(430, 'days');
-      var end = moment().subtract(415, 'days');
+      var start = new Date("June 3 2017 08:00");
+      var end = new Date("June 16 2017 08:00");
      $('input[name="date_time_range"]').daterangepicker({ 
+      {% if listform is defined %}
+      {% else %}
       startDate: start,
       endDate: end,  
+      {% endif %}
       timePicker: true,
       timePicker24Hour: true,
       ranges: {

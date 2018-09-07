@@ -52,6 +52,14 @@ class PopularCompanies(object):
     """
         date_range: range of date_time in string format as a list with two element
     """
+
+    time_span = (datetime.datetime.strptime(date_range[1], "%Y-%m-%d %H:%M") 
+                 - datetime.datetime.strptime(date_range[0], "%Y-%m-%d %H:%M"))
+
+    if time_span > datetime.timedelta(days=7):
+      table_to_query = 'unique_requests_nasdaq_daily'
+    else:
+      table_to_query = 'unique_requests_nasdaq_hourly'
     
     # query for the top 10 most popular companies in the date_range provided
     sql_command = """SELECT name_cik_table.company_name as company_name,
@@ -59,21 +67,33 @@ class PopularCompanies(object):
                             sum_unique_requests
                      FROM company_name_cik as name_cik_table
                      JOIN (SELECT cik, SUM(unique_requests) as sum_unique_requests
-                           FROM unique_requests_nasdaq_hourly
+                           FROM {table_to_query}
                            WHERE date_time BETWEEN  '{start_date_time}' AND  '{end_date_time}'
                            GROUP BY cik) as unique_hourly_table
                      ON unique_hourly_table.cik = name_cik_table.cik
                      ORDER BY sum_unique_requests DESC
-                     LIMIT 10;""".format(start_date_time=date_range[0], end_date_time=date_range[1])
+                     LIMIT 10;""".format(start_date_time=date_range[0], 
+                                         end_date_time=date_range[1],
+                                         table_to_query=table_to_query)
 
     return db.engine.execute(sql_command)
 
 
   def query_one_company(self, cik, date_range):
+    time_span = (datetime.datetime.strptime(date_range[1], "%Y-%m-%d %H:%M") 
+                 - datetime.datetime.strptime(date_range[0], "%Y-%m-%d %H:%M"))
+
+    if time_span > datetime.timedelta(days=7):
+      table_to_query = 'unique_requests_nasdaq_daily'
+    else:
+      table_to_query = 'unique_requests_nasdaq_hourly'
+
     sql_command = """SELECT date_time, unique_requests
-                     FROM unique_requests_nasdaq_daily
+                     FROM {table_to_query}
                      WHERE (cik = {cik}) AND (date_time BETWEEN  '{start_date_time}' AND  '{end_date_time}')
-                     ORDER BY date_time""".format(start_date_time=date_range[0], end_date_time=date_range[1], cik=cik)
+                     ORDER BY date_time""".format(start_date_time=date_range[0], 
+                                                  end_date_time=date_range[1], cik=cik,
+                                                  table_to_query=table_to_query)
 
     return db.engine.execute(sql_command)
 

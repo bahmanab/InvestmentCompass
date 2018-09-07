@@ -1,5 +1,6 @@
 from flask import Flask, request
 from flask import render_template
+from flask import send_from_directory
 from models import db, PopularCompanies
 from forms import DateTimeForm, CompanyListForm
 import os
@@ -7,8 +8,8 @@ import datetime
 
 app = Flask(__name__)
 
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:'+os.environ["postgres_password"]+'@localhost/edgar'
+
 db.init_app(app)
 
 app.secret_key = 'development-key'
@@ -76,6 +77,11 @@ def get_plot_data(popular_companies, name_list, cik_list, date_range):
 
 
     return series
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 
 @app.route("/", methods = ['GET', 'POST'])
